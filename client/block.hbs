@@ -1,0 +1,217 @@
+<div class="header-section">
+  <ul class="nav nav-tabs mt-2">
+    {{#if fromNetworkPaths}}
+      <li class="nav-item">
+        <a
+          {{action "changeTab" "fromNetworkPaths"}}
+          class="nav-link {{if (eq activeTab 'fromNetworkPaths') 'active'}}"
+        >
+          From Paths
+        </a>
+      </li>
+    {{/if}}
+    {{#if toNetworkPaths}}
+      <li class="nav-item">
+        <a
+          {{action "changeTab" "toNetworkPaths"}}
+          class="nav-link {{if (eq activeTab 'toNetworkPaths') 'active'}}"
+        >
+          To Paths
+        </a>
+      </li>
+    {{/if}}
+  </ul>
+</div>
+<div class="results">
+  {{#if (eq activeTab "fromNetworkPaths")}}
+    <h1 class="mb-2 p-title title-ips">
+      <div class="title-ip">{{block.entity.value}}</div>{{#if
+        fromNetwork.srcIpLocationType
+      }}<div>({{fromNetwork.srcIpLocationType}})</div>{{/if}}
+      {{fa-icon icon="arrow-right" fixedWidth=true}}
+      <div class="title-ip">{{block.userOptions.signalSourceIPAddress}}</div>{{#if
+        fromNetwork.dstIpLocationType
+      }}<div>({{fromNetwork.dstIpLocationType}})</div>{{/if}}
+    </h1>
+    {{#each fromNetworkPaths as |fromNetworkPath index|}}
+      <div class="mb-3">
+        <div class="mb-1 path-details">
+          <h1 class="p-title">
+            {{fa-icon icon="info-circle" fixedWidth=true}}
+            Path Details
+          </h1>
+          {{#if fromNetworkPath.hops.0.deviceName}}
+            <div>
+              <a
+                href="https://fwd.app/?/search?networkId={{block.userOptions.networkIdNumber}}&snapshotId={{block.userOptions.snapshotIdNumber}}&q=f({{block.userOptions.signalSourceIPAddress}}!{{fromNetworkPath.hops.0.deviceName}})(ipv4_dst.{{block.entity.value}})m(permit_all)"
+              >
+                View Details in Forward Networks
+                {{fa-icon icon="external-link" fixedWidth=true}}
+              </a>
+            </div>
+          {{else if fromNetwork.queryUrl}}
+            <div>
+              <a href="{{fromNetwork.queryUrl}}">
+                View Details in Forward Networks
+                {{fa-icon icon="external-link" fixedWidth=true}}
+              </a>
+            </div>
+          {{/if}}
+          {{#if fromNetworkPath.forwardingOutcome}}
+            <div>
+              <span class="p-key">Forwarding Outcome:</span>
+              <span class="p-value p-block">{{fromNetworkPath.forwardingOutcome}}</span>
+            </div>
+          {{/if}}
+          {{#if fromNetworkPath.securityOutcome}}
+            <div>
+              <span class="p-key">Security Outcome:</span>
+              <span class="p-value p-block">{{fromNetworkPath.securityOutcome}}</span>
+            </div>
+          {{/if}}
+        </div>
+
+        <div class="network-paths">
+          <h1 class="p-title">
+            {{fa-icon icon="link" fixedWidth=true}}
+            Network Paths
+          </h1>
+          {{#each fromNetworkPath.hops as |hop hopIndex|}}
+            <div class="mb-1 path-hop">
+              {{#if fromNetworkPath.hops.0.deviceName}}
+                <div class="device-name">
+                  <a
+                    href="https://fwd.app/?/search?networkId={{block.userOptions.networkIdNumber}}&snapshotId={{block.userOptions.snapshotIdNumber}}&q=f({{block.userOptions.signalSourceIPAddress}}!{{fromNetworkPath.hops.0.deviceName}})(ipv4_dst.{{block.entity.value}})m(permit_all)&device={{hopIndex}}"
+                  >
+                    {{hop.deviceName}}
+                    ({{hop.deviceType}})
+                    {{fa-icon icon="external-link" fixedWidth=true}}
+                  </a>
+                </div>
+              {{else}}
+                <div class="device-name">
+                  {{hop.deviceName}}
+                  ({{hop.deviceType}})
+                </div>
+              {{/if}}
+              {{#if hop.ingressInterface}}
+                <div>
+                  <span class="p-key">Ingress Interface:</span>
+                  <span class="p-value p-block">{{uppercase hop.ingressInterface}}</span>
+                </div>
+              {{/if}}
+              {{#if hop.egressInterface}}
+                <div>
+                  <span class="p-key">Egress Interface:</span>
+                  <span class="p-value p-block">{{uppercase hop.egressInterface}}</span>
+                </div>
+              {{/if}}
+              {{#if hop.behaviors}}
+                <div>
+                  <span class="p-key">Behaviors:</span>
+                  <span class="p-value p-block">{{join ", " hop.behaviors}}</span>
+                </div>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+  {{/if}}
+
+  {{#if (eq activeTab "toNetworkPaths")}}
+    <h1 class="mb-2 p-title title-ips">
+      <div class="title-ip">{{block.userOptions.signalSourceIPAddress}}</div>{{#if
+        toNetwork.srcIpLocationType
+      }}<div>({{toNetwork.srcIpLocationType}})</div>{{/if}}
+      {{fa-icon icon="arrow-right" fixedWidth=true}}
+      <div class="title-ip">{{block.entity.value}}</div>{{#if
+        toNetwork.dstIpLocationType
+      }}<div>({{toNetwork.dstIpLocationType}})</div>{{/if}}
+    </h1>
+    {{#each toNetworkPaths as |toNetworkPath index|}}
+      <div class="mb-3">
+        <div class="mb-1 path-details">
+          <h1 class="p-title">
+            {{fa-icon icon="info-circle" fixedWidth=true}}
+            Path Details
+          </h1>
+          {{#if toNetworkPath.hops.0.deviceName}}
+            <div>
+              <a
+                href="https://fwd.app/?/search?networkId={{block.userOptions.networkIdNumber}}&snapshotId={{block.userOptions.snapshotIdNumber}}&q=f({{block.entity.value}}!{{toNetworkPath.hops.0.deviceName}})(ipv4_dst.{{block.userOptions.signalSourceIPAddress}})m(permit_all)"
+              >
+                View Details in Forward Networks
+                {{fa-icon icon="external-link" fixedWidth=true}}
+              </a>
+            </div>
+          {{else if toNetwork.queryUrl}}
+            <div>
+              <a href="{{toNetwork.queryUrl}}">
+                View Details in Forward Networks
+                {{fa-icon icon="external-link" fixedWidth=true}}
+              </a>
+            </div>
+          {{/if}}
+          {{#if toNetworkPath.forwardingOutcome}}
+            <div>
+              <span class="p-key">Forwarding Outcome:</span>
+              <span class="p-value p-block">{{toNetworkPath.forwardingOutcome}}</span>
+            </div>
+          {{/if}}
+          {{#if toNetworkPath.securityOutcome}}
+            <div>
+              <span class="p-key">Security Outcome:</span>
+              <span class="p-value p-block">{{toNetworkPath.securityOutcome}}</span>
+            </div>
+          {{/if}}
+        </div>
+
+        <div class="network-paths">
+          <h1 class="p-title">
+            {{fa-icon icon="link" fixedWidth=true}}
+            Network Paths
+          </h1>
+          {{#each toNetworkPath.hops as |hop hopIndex|}}
+            <div class="mb-1 path-hop">
+              {{#if toNetworkPath.hops.0.deviceName}}
+                <div class="device-name">
+                  <a
+                    href="https://fwd.app/?/search?networkId={{block.userOptions.networkIdNumber}}&snapshotId={{block.userOptions.snapshotIdNumber}}&q=f({{block.entity.value}}!{{toNetworkPath.hops.0.deviceName}})(ipv4_dst.{{block.userOptions.signalSourceIPAddress}})m(permit_all)&device={{hopIndex}}"
+                  >
+                    {{hop.deviceName}}
+                    ({{hop.deviceType}})
+                    {{fa-icon icon="external-link" fixedWidth=true}}
+                  </a>
+                </div>
+              {{else}}
+                <div class="device-name">
+                  {{hop.deviceName}}
+                  ({{hop.deviceType}})
+                </div>
+              {{/if}}
+              {{#if hop.ingressInterface}}
+                <div>
+                  <span class="p-key">Ingress Interface:</span>
+                  <span class="p-value p-block">{{uppercase hop.ingressInterface}}</span>
+                </div>
+              {{/if}}
+              {{#if hop.egressInterface}}
+                <div>
+                  <span class="p-key">Egress Interface:</span>
+                  <span class="p-value p-block">{{uppercase hop.egressInterface}}</span>
+                </div>
+              {{/if}}
+              {{#if hop.behaviors}}
+                <div>
+                  <span class="p-key">Behaviors:</span>
+                  <span class="p-value p-block">{{join ", " hop.behaviors}}</span>
+                </div>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+  {{/if}}
+</div>

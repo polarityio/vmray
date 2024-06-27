@@ -1,0 +1,10 @@
+{
+  "name": "vmray",
+  "version": "3.0.0",
+  "main": "./integration.js",
+  "private": true,
+  "dependencies": {
+    "async": "^3.2.5",
+    "polarity-integration-utils": "^0.1.0"
+  }
+}
