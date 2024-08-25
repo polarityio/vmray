@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "async": "^3.2.5",
-    "polarity-integration-utils": "^0.1.0"
+    "postman-request": "^2.88.1-postman.39",
+    "xbytes": "^1.9.1"
   }
 }
