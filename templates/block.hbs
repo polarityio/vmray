@@ -9,6 +9,13 @@
   <li class="nav-item">
     <a {{action "changeTab" "summary"}} class="nav-link {{if (eq activeTab "summary") "active"}}" href="#">Summary</a>
   </li>
+  <li class="nav-item">
+    <a {{action "changeTab" "mitreAttack"}} class="nav-link {{if (eq activeTab "mitreAttack") "active"}}" href="#">ATT&CK</a>
+  </li>
+  <li class="nav-item">
+    <a {{action "changeTab" "fileCheck"}} class="nav-link {{if (eq activeTab "fileCheck") "active"}}" href="#">{{fa-icon
+            icon="file-search" fixedWidth=true}} File Check</a>
+  </li>
 </ul>
 {{#if (eq activeTab "overview")}}
   <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} Sample Overview <span
@@ -29,7 +36,7 @@
     </div>
     <div class="mt-1">
       <a href="{{sample.sample_webif_url}}">View in VMRay{{fa-icon icon="external-link-square" fixedWidth=true
-                                                                    class="external-link-icon"}}</a>
+                                                                   class="external-link-icon"}}</a>
     </div>
     <div class="p-value mt-1">
       {{#if (eq sample.sample_type "URL")}}
@@ -155,8 +162,8 @@
 
 {{#if (eq activeTab "summary")}}
 
-  {{!-- Summary -> Top Analyses --}}
-  <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} Top Analyses</h1>
+{{!-- Summary -> Top Analyses --}}
+  <h1 class="p-title">{{fa-icon icon="chart-network" fixedWidth=true}} Top Analyses</h1>
   {{#if loadingAnalysis}}
     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Top Analysis
   {{/if}}
@@ -167,7 +174,8 @@
     <div class="analysis-container">
       <div>
         {{#if analysis.analysis_vm_description}}
-          {{analysis.analysis_vm_description}} {{#if analysis.analysis_configuration_description}}| {{analysis.analysis_configuration_description}}{{/if}}
+          {{analysis.analysis_vm_description}} {{#if analysis.analysis_configuration_description}}
+          | {{analysis.analysis_configuration_description}}{{/if}}
         {{else if (eq analysis.analysis_static_config_id 1)}}
           Default static configuration
         {{else if analysis.analysis_static_config_name}}
@@ -181,13 +189,19 @@
           {{else}}
             Analysis
           {{/if}}
-          <a href="{{analysis.analysis_webif_url}}" class="p-link p-footnote footnote-link">(#{{analysis.analysis_id}}{{fa-icon icon="external-link" fixedWidth=true class="external-link-icon"}})</a>
+          <a href="{{analysis.analysis_webif_url}}"
+             class="p-link p-footnote footnote-link">(#{{analysis.analysis_id}}{{fa-icon icon="external-link"
+                                                                                         fixedWidth=true
+                                                                                         class="external-link-icon"}}
+            )</a>
         </span>
       </div>
       <div class="analysis-metadata-container mt-1">
         <div>
-          Created <span class="emphasize-text">{{moment-from-now analysis.analysis_created timeZone=timezone}}{{bs-tooltip title=(moment-format analysis.analysis_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
-           by {{analysis.analysis_user_email}}
+          Created <span class="emphasize-text">{{moment-from-now analysis.analysis_created
+                                                                 timeZone=timezone}}{{bs-tooltip
+                title=(moment-format analysis.analysis_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+          by {{analysis.analysis_user_email}}
         </div>
 
         <div class="analysis-verdict {{analysis.analysis_verdict_color}}">
@@ -197,9 +211,9 @@
             {{analysis.analysis_verdict}}
           {{/if}}
           {{#unless (is-empty analysis.analysis_verdict_reason_description)}}
-              <span>
+            <span>
               {{fa-icon icon="info-circle" fixedWidth=true}}
-                {{bs-tooltip title=analysis.analysis_verdict_reason_description}}
+              {{bs-tooltip title=analysis.analysis_verdict_reason_description}}
             </span>
           {{/unless}}
           {{#if (is-empty analysis.analysis_verdict)}}
@@ -214,12 +228,12 @@
   {{/each}}
 
   {{!-- Summary -> VMRay Threat Identifiers --}}
-  <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} VMRay Threat Identifiers</h1>
+  <h1 class="p-title">{{fa-icon icon="viruses" fixedWidth=true}} VMRay Threat Identifiers</h1>
   {{#if loadingVti}}
     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading VMRAY Threat Identifiers
   {{/if}}
   {{#if (eq details.vti.threat_indicators.length 0)}}
-    <div>No VMRay Threat Indicators found</div>
+    <div>No VMRay Threat Identifiers found</div>
   {{/if}}
   {{#each details.vti.threat_indicators as | vti |}}
     <div class="vti-container">
@@ -249,7 +263,7 @@
   {{/each}}
 
   {{!-- Summary -> Top Child Samples --}}
-  <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} Top Child Samples</h1>
+  <h1 class="p-title">{{fa-icon icon="child" fixedWidth=true}} Top Child Samples</h1>
   {{#if loadingRelations}}
     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Top Child Samples
   {{/if}}
@@ -259,52 +273,237 @@
     {{/if}}
     {{#each sample.sample_child_relations as | relation |}}
       {{#let (get details.relations relation.relation_id) as | child |}}
-      <div class="analysis-container">
-        <div>
-          {{child.relation.sample_relation_relation_reason}}
-        </div>
-        <div class="analysis-metadata-container mt-1">
+        <div class="analysis-container">
           <div>
-            First submitted <span class="emphasize-text">{{moment-from-now child.relation.sample_relation_created timeZone=timezone}}{{bs-tooltip title=(moment-format child.relation.sample_relation_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+            {{child.relation.sample_relation_relation_reason}}
           </div>
-          <div class="analysis-verdict {{relation.relation_child_sample_verdict_color}}">
-            {{#if (is-empty relation.relation_child_sample_verdict)}}
-              N/A
-            {{else}}
-              {{relation.relation_child_sample_verdict}}
-            {{/if}}
-            {{#unless (is-empty relation.relation_child_sample_verdict_reason_description)}}
-              <span>
+          <div class="analysis-metadata-container mt-1">
+            <div>
+              First submitted <span class="emphasize-text">{{moment-from-now child.relation.sample_relation_created
+                                                                             timeZone=timezone}}{{bs-tooltip
+                    title=(moment-format child.relation.sample_relation_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+            </div>
+            <div class="analysis-verdict {{relation.relation_child_sample_verdict_color}}">
+              {{#if (is-empty relation.relation_child_sample_verdict)}}
+                N/A
+              {{else}}
+                {{relation.relation_child_sample_verdict}}
+              {{/if}}
+              {{#unless (is-empty relation.relation_child_sample_verdict_reason_description)}}
+                <span>
                 {{fa-icon icon="info-circle" fixedWidth=true}}
-                {{bs-tooltip title=relation.relation_child_sample_verdict_reason_description}}
+                  {{bs-tooltip title=relation.relation_child_sample_verdict_reason_description}}
               </span>
-            {{/unless}}
+              {{/unless}}
+            </div>
+          </div>
+          <div>
+            <span class="p-key">Relation Type:</span>
+            <span class="p-value">{{relation.relation_type}}</span>
+          </div>
+          <div>
+            <span class="p-key">Sample Name:</span>
+            <span class="p-value">
+              {{#if (eq child.sample.sample_type "URL")}}
+                {{child.sample.sample_display_url}}
+              {{else}}
+                {{child.sample.sample_filename}}
+              {{/if}}
+            </span>
+          </div>
+          <div>
+            <span class="p-key">Sample Type:</span>
+            <span class="p-value">{{child.sample.sample_type}}</span>
+          </div>
+          <div>
+            <span class="p-key">Sample ID:</span>
+            <span class="p-value"><a href="{{child.sample.sample_webif_url}}">#{{child.sample.sample_id}} {{fa-icon
+                    icon="external-link" fixedWidth=true class="external-link-icon"}}</a></span>
           </div>
         </div>
-        <div>
-          <span class="p-key">Relation Type:</span>
-          <span class="p-value">{{relation.relation_type}}</span>
-        </div>
-        <div>
-          <span class="p-key">Sample Name:</span>
-          <span class="p-value">
-            {{#if (eq child.sample.sample_type "URL")}}
-              {{child.sample.sample_display_url}}
-            {{else}}
-              {{child.sample.sample_filename}}
-            {{/if}}
-          </span>
-        </div>
-        <div>
-          <span class="p-key">Sample Type:</span>
-          <span class="p-value">{{child.sample.sample_type}}</span>
-        </div>
-        <div>
-          <span class="p-key">Sample ID:</span>
-          <span class="p-value"><a href="{{child.sample.sample_webif_url}}">#{{child.sample.sample_id}} {{fa-icon icon="external-link" fixedWidth=true class="external-link-icon"}}</a></span>
-        </div>
-      </div>
       {{/let}}
     {{/each}}
   {{/unless}}
+{{/if}}
+
+{{#if (eq activeTab "mitreAttack")}}
+  <h1 class="p-title">{{fa-icon icon="file" fixedWidth=true}} ATT&CK</h1>
+  {{#if mitreAttackLoading}}
+    {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading ATT&CK Data
+  {{/if}}
+  {{#unless mitreAttackLoading}}
+    {{#if (eq details.mitreAttack.totalTechniques 0)}}
+      There are currently no MITRE ATT&CK™ matrices for this sample.
+    {{/if}}
+    {{#each details.mitreAttack.tacticsOrder as | tacticName |}}
+      {{#let (get details.mitreAttack.tactics tacticName) as | techniques |}}
+        {{#if (gt techniques.length 0)}}
+          <div class="tactic-column">
+            <div class="tactic-block">
+              {{tacticName}}
+            </div>
+            {{#each techniques as | technique |}}
+              <div
+                class="technique-block d-flex align-items-center justify-content-between {{technique.max_threat_indicator_score_color_class}}"
+                {{action (toggle "__show" technique)}}
+              >
+                <div>
+                  {{technique.technique}}
+                </div>
+                <div class="d-flex align-items-center">
+                  {{#if technique.__show}}
+                    {{fa-icon icon="chevron-up" fixedWidth=true}}
+                  {{else}}
+                    {{fa-icon icon="chevron-down" fixedWidth=true}}
+                  {{/if}}
+                </div>
+              </div>
+              {{#if technique.__show}}
+                <div class="vtis-container ml-1 mt-1">
+                <div>
+                  Corresponding VMRay Threat Identifiers
+                </div>
+                {{#each technique.threat_indicators as | vti |}}
+                  <div class="vti-container mt-1">
+                    <div class="vti-score {{vti.score_class}}">
+                      {{#if (eq vti.score -1)}}
+                        &mdash;
+                      {{else}}
+                        {{vti.score}} / 5
+                      {{/if}}
+                    </div>
+                    <div class="vti-data-container">
+                      <div class="vti-header">
+                        <div>
+                          {{vti.category}}
+                        </div>
+                        <div>
+                          {{#each vti.classifications as | classification |}}
+                            <span class="">{{classification}}</span>
+                          {{/each}}
+                        </div>
+                      </div>
+                      <div class="p-footnote">
+                        {{vti.operation}}
+                      </div>
+                    </div>
+                  </div>
+                {{/each}}
+              </div>
+              {{/if}}
+            {{/each}}
+          </div>
+        {{/if}}
+      {{/let}}
+    {{/each}}
+  {{/unless}}
+{{/if}}
+
+{{#if (eq activeTab "fileCheck")}}
+  <h1 class="p-title">{{fa-icon icon="file" fixedWidth=true}} VMRay File Check</h1>
+  <div
+      class="file-drop-zone {{if onDragOver "on-drag-over"}}"
+      ondrop={{action "getSampleByFile"}}
+      ondragover={{action "cancelDefault"}}
+      ondragenter={{action (mut onDragOver) true}}
+      ondragleave ={{action (mut onDragOver) false}}>
+    <div class="upload-icon disable-pointer-events">
+      {{#if loadingFileCheckSample}}
+        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+      {{else}}
+        {{fa-icon icon="file-search" fixedWidth=true}}
+      {{/if}}
+    </div>
+    <div class="upload-message disable-pointer-events">
+      {{#if loadingFileCheckSample}}
+        Checking File
+      {{else if onDragOver}}
+        Drop the file to determine if a sample already exists in VMRay.
+      {{else}}
+        Drag and drop a file to determine if a sample already exists in VMRay.
+      {{/if}}
+    </div>
+    <div class="p-footnote mt-2 disable-pointer-events">
+      Polarity will compute the SHA256 of the provided file and
+      check if it has already been submitted to VMRay.  The file will not be uploaded to VMRay.
+    </div>
+  </div>
+  <div class="text-right">
+    <!--default html file upload button (hidden)-->
+    <input type="file" id="vmray-file-upload-btn-{{uniqueIdPrefix}}" onchange={{action "getSampleByFile"}} hidden/>
+    <!--our custom file upload button-->
+    or <label for="vmray-file-upload-btn-{{uniqueIdPrefix}}" class="p-action choose-file-btn">Choose a File</label>
+  </div>
+  {{#each fileCheckResults as | fileCheckResult |}}
+    <div class="file-check-container">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="mb-1">
+          <span class="emphasize-text">{{fileCheckResult.fileName}}</span> <span class="p-footnote">({{fileCheckResult.fileSize}} bytes</span>)
+        </div>
+        <div class="d-flex align-items-center justify-content-end copy-btn-container">
+          <button class="btn copy-btn p-action" {{action "runOnDemandLookup" fileCheckResult.sha256}}>
+            {{fa-icon icon="search" fixedWidth=true}}
+            {{bs-tooltip title="Search SHA256 in Polarity"}}
+          </button>
+
+        </div>
+      </div>
+      <div>
+        <span class="p-key">SHA256:</span>
+        <span class="p-value">{{fileCheckResult.sha256}}</span>
+      </div>
+      {{#if fileCheckResult.sample}}
+        <div>
+          <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} Sample Overview <span
+                  class="p-footnote ml-1">#{{fileCheckResult.sample.sample_id}}</span></h1>
+            <div class="verdict {{fileCheckResult.sample.sample_verdict_color}}">
+              {{#if fileCheckResult.sample.sample_verdict}}
+                {{fileCheckResult.sample.sample_verdict}}
+              {{else}}
+                Verdict Not Available
+              {{/if}}
+              {{#if fileCheckResult.sample.sample_verdict_reason_description}}
+                <span>
+                  {{fa-icon icon="info-circle" fixedWidth=true}}
+                  {{bs-tooltip title=fileCheckResult.sample.sample_verdict_reason_description}}
+                </span>
+              {{/if}}
+            </div>
+            <div class="mt-1">
+              <a href="{{fileCheckResult.sample.sample_webif_url}}">View in VMRay{{fa-icon icon="external-link-square"
+                                                                                            fixedWidth=true
+                                                                                            class="external-link-icon"}}</a>
+            </div>
+
+            <div class="mt-1">
+              <span class="p-key">Sample Name: </span>
+              <span class="p-value">
+                {{#if (eq fileCheckResult.sample.sample_type "URL")}}
+                  {{fileCheckResult.sample.sample_display_url}}
+                {{else}}
+                  {{fileCheckResult.sample.sample_filename}}
+                {{/if}}
+              </span>
+            </div>
+            <div class="">
+              <span class="p-key">Sample Type:</span>
+              <span class="p-value">{{fileCheckResult.sample.sample_type}}</span>
+            </div>
+            <div class="p-value mt-1">
+              First submitted <span class="emphasize-text">{{moment-from-now fileCheckResult.sample.sample_created
+                                                                             timeZone=timezone}}{{bs-tooltip
+                    title=(moment-format fileCheckResult.sample.sample_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+            </div>
+          </div>
+        {{else}}
+          <div class="mt-1">
+            {{fa-icon icon="empty-set" fixedWidth=true}} No Sample Found for File
+          </div>
+          <div class="mt-1">
+            <a href="https://us.cloud.vmray.com/sample-submission" class="p-link">Open VMRay to upload file {{fa-icon icon="external-link" class="external-link-icon" fixedWidth=true}}</a>
+          </div>
+        {{/if}}
+      </div>
+  {{/each}}
+
 {{/if}}

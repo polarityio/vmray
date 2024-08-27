@@ -6,10 +6,10 @@ const { ApiRequestError } = require('./errors');
 const { getLogger } = require('./logger');
 const SUCCESS_CODES = [200];
 
-async function searchSampleByHash(entities, options) {
+async function searchSampleByHash(entity, options) {
   const Logger = getLogger();
 
-  const requestOptions = createRequestOptions(entities, options);
+  const requestOptions = createRequestOptions(entity, options);
 
   Logger.trace({ requestOptions }, 'Request Options');
 

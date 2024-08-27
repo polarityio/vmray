@@ -12,7 +12,7 @@ const createResultObject = (entity, apiResponse, options) => {
     return {
       entity,
       data: {
-        summary: createSummary(apiResponse.data[0], options),
+        summary: createSummary(sample, options),
         details: {
           sample: {
             sample_filesize_human: xbytes(sample.sample_filesize),

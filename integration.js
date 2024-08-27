@@ -10,6 +10,8 @@ const { getApiQuota } = require('./src/get-api-quota');
 const { getVti } = require('./src/get-vti');
 const { getAnalysis } = require('./src/get-analysis');
 const { getRelations } = require('./src/get-relations');
+const { getMitreAttack } = require('./src/get-mitre-attack');
+const { getIndicators } = require('./src/get-indicators');
 
 const MAX_TASKS_AT_A_TIME = 5;
 
@@ -59,8 +61,32 @@ async function onDetails(resultObject, options, cb) {
 }
 
 async function onMessage(payload, options, cb) {
-  Logger.trace({ payload }, 'onMessage');
+  Logger.info({ payload }, 'onMessage');
   switch (payload.action) {
+    case 'GET_SAMPLE_BY_SHA256':
+      try {
+        const sampleResponse = await searchSampleByHash(
+          {
+            value: payload.sha256,
+            isSHA256: true
+          },
+          options
+        );
+        Logger.info({ sampleResponse }, 'Get Sample by SHA256 Data');
+        if (Array.isArray(sampleResponse.data) && sampleResponse.data.length > 0) {
+          const sample = sampleResponse.data[0];
+          cb(null, sample);
+        } else {
+          cb(null, {
+            noResults: true
+          });
+        }
+      } catch (error) {
+        const errorAsPojo = parseErrorToReadableJSON(error);
+        Logger.error({ error: errorAsPojo }, 'Error in fetching Sample by SHA256');
+        return cb(errorAsPojo);
+      }
+      break;
     case 'GET_VTI':
       try {
         const vti = await getVti(payload.sampleId, options);
@@ -91,6 +117,28 @@ async function onMessage(payload, options, cb) {
       } catch (error) {
         const errorAsPojo = parseErrorToReadableJSON(error);
         Logger.error({ error: errorAsPojo }, 'Error in fetching Relation');
+        return cb(errorAsPojo);
+      }
+      break;
+    case 'GET_MITRE_ATTACK':
+      try {
+        const mitreAttack = await getMitreAttack(payload.sampleId, options);
+        Logger.info({ mitreAttack }, 'Mitre Attack Data');
+        cb(null, mitreAttack);
+      } catch (error) {
+        const errorAsPojo = parseErrorToReadableJSON(error);
+        Logger.error({ error: errorAsPojo }, 'Error in fetching Analysis');
+        return cb(errorAsPojo);
+      }
+      break;
+    case 'GET_INDICATORS':
+      try {
+        const indicators = await getIndicators(payload.sampleId, options);
+        Logger.trace({ indicators }, 'Indicators');
+        cb(null, indicators);
+      } catch (error) {
+        const errorAsPojo = parseErrorToReadableJSON(error);
+        Logger.error({ error: errorAsPojo }, 'Error in fetching Analysis');
         return cb(errorAsPojo);
       }
       break;
