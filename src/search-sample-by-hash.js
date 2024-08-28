@@ -36,8 +36,7 @@ function createRequestOptions(entity, options) {
     uri: `${options.url}/rest/sample/${getHashType(entity)}/${entity.value}`,
     method: 'GET'
   };
-
-  getLogger().info({requestOptions}, 'Request Options');
+  
   return requestOptions;
 }
 
