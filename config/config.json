@@ -1,4 +1,5 @@
 {
+  "polarityIntegrationUuid": "53b32200-6512-11ef-9c9c-2d722e1bf18b",
   "name": "VMRay",
   "acronym": "VMR",
   "description": "Lookup VMRay Sample information by hash and check local files for existing Samples in VMRay.",
