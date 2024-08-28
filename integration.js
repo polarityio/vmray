@@ -39,7 +39,6 @@ const doLookup = async (entities, options, cb) => {
   try {
     await async.parallelLimit(tasks, MAX_TASKS_AT_A_TIME);
   } catch (error) {
-    Logger.error(error, 'Error in doLookup');
     return cb(error);
   }
 
@@ -53,7 +52,6 @@ async function onDetails(resultObject, options, cb) {
     resultObject.data.details.quota = quota;
     cb(null, resultObject.data);
   } catch (error) {
-    Logger.error(error, 'Error in fetching quota');
     return cb(error);
   }
 }
@@ -80,7 +78,6 @@ async function onMessage(payload, options, cb) {
           });
         }
       } catch (error) {
-        Logger.error(error, 'Error in fetching Sample by SHA256');
         return cb(error);
       }
       break;
@@ -90,7 +87,6 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ vti }, 'VTI Data');
         cb(null, vti);
       } catch (error) {
-        Logger.error(error, 'Error in fetching VTIs');
         return cb(error);
       }
       break;
@@ -100,7 +96,6 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ analysis }, 'Analysis Data');
         cb(null, analysis);
       } catch (error) {
-        Logger.error(error, 'Error in fetching Analysis');
         return cb(error);
       }
       break;
@@ -110,7 +105,6 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ relations }, 'Relations Data');
         cb(null, relations);
       } catch (error) {
-        Logger.error(error, 'Error in fetching Relation');
         return cb(error);
       }
       break;
@@ -120,7 +114,6 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ mitreAttack }, 'Mitre ATT&CK Data');
         cb(null, mitreAttack);
       } catch (error) {
-        Logger.error(error, 'Error in fetching Mitre ATT&CK');
         return cb(error);
       }
       break;
@@ -130,7 +123,6 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ indicators }, 'Indicators');
         cb(null, indicators);
       } catch (error) {
-        Logger.error(error, 'Error in fetching Indicators');
         return cb(error);
       }
       break;
@@ -141,9 +133,9 @@ function validateOptions(userOptions, cb) {
   let errors = [];
 
   if (
-      typeof userOptions.apiKey.value !== 'string' ||
-      (typeof userOptions.apiKey.value === 'string' &&
-          userOptions.apiKey.value.length === 0)
+    typeof userOptions.url.value !== 'string' ||
+    (typeof userOptions.url.value === 'string' &&
+      userOptions.url.value.length === 0)
   ) {
     errors.push({
       key: 'url',

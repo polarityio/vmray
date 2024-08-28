@@ -22,7 +22,8 @@ async function getApiQuota(options) {
       `Unexpected status code ${apiResponse.statusCode} received when fetching quota from VMRay API`,
       {
         statusCode: apiResponse.statusCode,
-        requestOptions: apiResponse.requestOptions
+        requestOptions,
+        responseBody: apiResponse.body
       }
     );
   }

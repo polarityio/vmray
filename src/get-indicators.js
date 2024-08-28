@@ -23,7 +23,8 @@ async function getIndicators(sampleId, options) {
       `Unexpected status code ${apiResponse.statusCode} received when fetching Indicators from VMRay API`,
       {
         statusCode: apiResponse.statusCode,
-        requestOptions: apiResponse.requestOptions
+        requestOptions,
+        responseBody: apiResponse.body
       }
     );
   }

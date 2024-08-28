@@ -22,7 +22,8 @@ async function searchSampleByHash(entity, options) {
       `Unexpected status code ${apiResponse.statusCode} received when making request to the VMRay API`,
       {
         statusCode: apiResponse.statusCode,
-        requestOptions: apiResponse.requestOptions
+        requestOptions,
+        responseBody: apiResponse.body
       }
     );
   }

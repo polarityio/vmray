@@ -50,7 +50,8 @@ async function getMitreAttack(sampleId, options) {
       `Unexpected status code ${apiResponse.statusCode} received when fetching Mitre Attack from VMRay API`,
       {
         statusCode: apiResponse.statusCode,
-        requestOptions: apiResponse.requestOptions
+        requestOptions,
+        responseBody: apiResponse.body
       }
     );
   }

@@ -95,7 +95,6 @@ class IntegrationError extends Error {
     // a user friendly message in the Overlay Window.
     this.detail = message;
     this.name = this.constructor.name;
-    this.help = '';
     this.meta = {
       ...properties
     };
@@ -105,6 +104,8 @@ class IntegrationError extends Error {
     if (properties.requestOptions) {
       this.meta.requestOptions = this.sanitizeRequestOptions(properties.requestOptions);
     }
+
+    Logger.error({error: this}, this.constructor.name);
   }
 
   /**

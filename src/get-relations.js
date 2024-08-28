@@ -14,17 +14,19 @@ async function getRelations(relations, options) {
 
   relations.forEach((relation) => {
     tasks.push(async () => {
+      const relationRequestOptions = {
+        uri: `${options.url}/rest/sample_relation/${relation.relationId}`
+      };
       const relationApiResponse = await polarityRequest.request(
-        {
-          uri: `${options.url}/rest/sample_relation/${relation.relationId}`
-        },
+        relationRequestOptions,
         options
       );
 
+      const sampleRequestOptions = {
+        uri: `${options.url}/rest/sample/${relation.relationSampleId}`
+      };
       const sampleApiResponse = await polarityRequest.request(
-        {
-          uri: `${options.url}/rest/sample/${relation.relationSampleId}`
-        },
+        sampleRequestOptions,
         options
       );
 
@@ -33,18 +35,20 @@ async function getRelations(relations, options) {
           `Unexpected status code ${apiResponse.statusCode} received when fetching Relation from VMRay API`,
           {
             statusCode: relationApiResponse.statusCode,
-            requestOptions: relationApiResponse.requestOptions
+            requestOptions: relationRequestOptions,
+            responseBody: relationApiResponse.body
           }
         );
       }
 
       if (!SUCCESS_CODES.includes(sampleApiResponse.statusCode)) {
         throw new ApiRequestError(
-            `Unexpected status code ${sampleApiResponse.statusCode} received when fetching Relation Sample from VMRay API`,
-            {
-              statusCode: sampleApiResponse.statusCode,
-              requestOptions: sampleApiResponse.requestOptions
-            }
+          `Unexpected status code ${sampleApiResponse.statusCode} received when fetching Relation Sample from VMRay API`,
+          {
+            statusCode: sampleApiResponse.statusCode,
+            requestOptions: sampleRequestOptions,
+            responseBody: sampleApiResponse.body
+          }
         );
       }
 
