@@ -28,11 +28,21 @@ async function getIndicators(sampleId, options) {
     );
   }
 
-  if (apiResponse.body.data && apiResponse.body.data.iocs) {
+  if (apiResponse.body.data && apiResponse.body.data.iocs && hasIocs(apiResponse.body.data.iocs)) {
     return apiResponse.body.data.iocs;
   } else {
-    return {};
+    return null;
   }
+}
+
+function hasIocs(iocs){
+  const keys = Object.keys(iocs);
+  for(let i=0; i<keys.length; i++){
+    if(iocs[keys[i]].length > 0){
+      return true;
+    }
+  }
+  return false;
 }
 
 module.exports = {

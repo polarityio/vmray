@@ -1,7 +1,7 @@
 {
   "name": "VMRay",
   "acronym": "VMR",
-  "description": "TODO",
+  "description": "Lookup VMRay Sample information by hash and check local files for existing Samples in VMRay.",
   "entityTypes": [
     "MD5",
     "SHA1",
@@ -33,8 +33,8 @@
   "options": [
     {
       "key": "url",
-      "name": "VMRay API URL",
-      "description": "The base URL of the VMRay API including the schema (i.e., https://)",
+      "name": "VMRay URL",
+      "description": "The base URL of your hosted or Cloud based VMRay instance including the schema (i.e., https://).  For example, \"https://us.cloud.vmray.com\" or \"https://eu.cloud.vmray.com\".",
       "default": "",
       "type": "text",
       "userCanEdit": false,
@@ -46,6 +46,15 @@
       "description": "A valid VMRay API Key",
       "default": "",
       "type": "password",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "returnMisses",
+      "name": "Return result when no sample is found",
+      "description": "If checked, the integration will return a result even when no Sample could be found for the given hash.",
+      "default": true,
+      "type": "boolean",
       "userCanEdit": false,
       "adminOnly": true
     }

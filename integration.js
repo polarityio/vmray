@@ -39,9 +39,8 @@ const doLookup = async (entities, options, cb) => {
   try {
     await async.parallelLimit(tasks, MAX_TASKS_AT_A_TIME);
   } catch (error) {
-    const errorAsPojo = parseErrorToReadableJSON(error);
-    Logger.error({ error: errorAsPojo }, 'Error in doLookup');
-    return cb(errorAsPojo);
+    Logger.error(error, 'Error in doLookup');
+    return cb(error);
   }
 
   Logger.trace({ lookupResults }, 'Lookup Results');
@@ -54,14 +53,13 @@ async function onDetails(resultObject, options, cb) {
     resultObject.data.details.quota = quota;
     cb(null, resultObject.data);
   } catch (error) {
-    const errorAsPojo = parseErrorToReadableJSON(error);
-    Logger.error({ error: errorAsPojo }, 'Error in fetching quota');
-    return cb(errorAsPojo);
+    Logger.error(error, 'Error in fetching quota');
+    return cb(error);
   }
 }
 
 async function onMessage(payload, options, cb) {
-  Logger.info({ payload }, 'onMessage');
+  Logger.trace({ payload }, 'onMessage payload');
   switch (payload.action) {
     case 'GET_SAMPLE_BY_SHA256':
       try {
@@ -72,7 +70,7 @@ async function onMessage(payload, options, cb) {
           },
           options
         );
-        Logger.info({ sampleResponse }, 'Get Sample by SHA256 Data');
+        Logger.trace({ sampleResponse }, 'Get Sample by SHA256 Data');
         if (Array.isArray(sampleResponse.data) && sampleResponse.data.length > 0) {
           const sample = sampleResponse.data[0];
           cb(null, sample);
@@ -82,9 +80,8 @@ async function onMessage(payload, options, cb) {
           });
         }
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching Sample by SHA256');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching Sample by SHA256');
+        return cb(error);
       }
       break;
     case 'GET_VTI':
@@ -93,9 +90,8 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ vti }, 'VTI Data');
         cb(null, vti);
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching VTIs');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching VTIs');
+        return cb(error);
       }
       break;
     case 'GET_ANALYSIS':
@@ -104,9 +100,8 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ analysis }, 'Analysis Data');
         cb(null, analysis);
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching Analysis');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching Analysis');
+        return cb(error);
       }
       break;
     case 'GET_RELATIONS':
@@ -115,20 +110,18 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ relations }, 'Relations Data');
         cb(null, relations);
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching Relation');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching Relation');
+        return cb(error);
       }
       break;
     case 'GET_MITRE_ATTACK':
       try {
         const mitreAttack = await getMitreAttack(payload.sampleId, options);
-        Logger.info({ mitreAttack }, 'Mitre Attack Data');
+        Logger.trace({ mitreAttack }, 'Mitre ATT&CK Data');
         cb(null, mitreAttack);
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching Analysis');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching Mitre ATT&CK');
+        return cb(error);
       }
       break;
     case 'GET_INDICATORS':
@@ -137,9 +130,8 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ indicators }, 'Indicators');
         cb(null, indicators);
       } catch (error) {
-        const errorAsPojo = parseErrorToReadableJSON(error);
-        Logger.error({ error: errorAsPojo }, 'Error in fetching Analysis');
-        return cb(errorAsPojo);
+        Logger.error(error, 'Error in fetching Indicators');
+        return cb(error);
       }
       break;
   }
@@ -147,6 +139,17 @@ async function onMessage(payload, options, cb) {
 
 function validateOptions(userOptions, cb) {
   let errors = [];
+
+  if (
+      typeof userOptions.apiKey.value !== 'string' ||
+      (typeof userOptions.apiKey.value === 'string' &&
+          userOptions.apiKey.value.length === 0)
+  ) {
+    errors.push({
+      key: 'url',
+      message: 'You must provide a valid VMRay API URL'
+    });
+  }
 
   if (
     typeof userOptions.apiKey.value !== 'string' ||

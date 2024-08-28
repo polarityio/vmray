@@ -56,13 +56,12 @@ const NETWORK_CONNECTION_ERROR_CODES = new Set([
 //TODO: JSON.stringify(error, Object.getOwnPropertyNames(error)) doesn't seem to stringify nested properties
 //so anything inside the `meta` property doesn't get stringified
 const parseErrorToReadableJSON = (error) => {
-  if(error instanceof IntegrationError){
-    return JSON.parse(JSON.stringify(error))
+  if (error instanceof IntegrationError) {
+    return JSON.parse(JSON.stringify(error));
   } else {
     return JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
   }
-}
-
+};
 
 /**
  * Native errors contain the following properties:
@@ -144,35 +143,6 @@ class IntegrationError extends Error {
 
     return sanitizedOptions;
   }
-
-  /**
-   * Serializes the error's properties into a POJO.  The order of the
-   * properties is preserved when serialized.
-   *
-   * @returns {{name: string, detail: string}}
-   */
-  toJSON() {
-    const Logger = getLogger();
-
-    let props = {
-      name: this.name,
-      detail: this.detail
-    };
-
-    if (this.help) {
-      props.help = this.help;
-    }
-
-    if (this.stack) {
-      props.stack = this.stack;
-    }
-
-    if (Object.keys(this.meta).length > 0) {
-      props.meta = this.meta;
-    }
-
-    return props;
-  }
 }
 
 /**
@@ -231,6 +201,22 @@ class RetryRequestError extends IntegrationError {
     super(message, properties);
   }
 }
+
+// https://stackoverflow.com/a/18391400/2853094
+if (!('toJSON' in IntegrationError.prototype))
+  Object.defineProperty(IntegrationError.prototype, 'toJSON', {
+    value: function () {
+      let alt = {};
+
+      Object.getOwnPropertyNames(this).forEach(function (key) {
+        alt[key] = this[key];
+      }, this);
+
+      return alt;
+    },
+    configurable: true,
+    writable: true
+  });
 
 module.exports = {
   ApiRequestError,

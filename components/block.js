@@ -65,11 +65,19 @@ polarity.export = PolarityComponent.extend({
       }
 
       if (
-          tabName === 'mitreAttack' &&
-          typeof this.get('details.mitreAttack') === 'undefined' &&
-          !this.get('mitreAttackLoading')
+        tabName === 'mitreAttack' &&
+        typeof this.get('details.mitreAttack') === 'undefined' &&
+        !this.get('mitreAttackLoading')
       ) {
         this.loadMitreAttack();
+      }
+
+      if (
+        tabName === 'indicators' &&
+        typeof this.get('details.indicators') === 'undefined' &&
+        !this.get('indicatorsLoading')
+      ) {
+        this.loadIndicators();
       }
     },
     copyText: function (text, showVariable) {
@@ -79,8 +87,6 @@ polarity.export = PolarityComponent.extend({
       this.cancelDefaultEvent(e);
     },
     getSampleByFile: function (event) {
-      console.info('GET SAMPLE BY FILE');
-
       this.cancelDefaultEvent(event);
 
       let file;
@@ -236,6 +242,24 @@ polarity.export = PolarityComponent.extend({
         this.set('mitreAttackLoading', false);
       });
   },
+  loadIndicators: function () {
+    this.set('indicatorsLoading', true);
+    const payload = {
+      action: 'GET_INDICATORS',
+      sampleId: this.get('sample.sample_id')
+    };
+    this.sendIntegrationMessage(payload)
+      .then((result) => {
+        this.set('details.indicators', result);
+      })
+      .catch((err) => {
+        console.error(err);
+        this.set('errorMessage', JSON.stringify(err, null, 2));
+      })
+      .finally(() => {
+        this.set('indicatorsLoading', false);
+      });
+  },
   getSampleBySha256: function (sha256, file) {
     this.set('loadingFileCheckSample', true);
     const payload = {
@@ -254,8 +278,6 @@ polarity.export = PolarityComponent.extend({
           sha256,
           sample: result.noResults ? null : result
         });
-
-        console.info(this.get('fileCheckResults'));
       })
       .catch((err) => {
         console.error(err);
@@ -273,8 +295,7 @@ polarity.export = PolarityComponent.extend({
       })
       .then((result) => {
         result = new Uint8Array(result);
-        let resultHex = this.Uint8ArrayToHexString(result);
-        console.info(resultHex);
+        const resultHex = this.Uint8ArrayToHexString(result);
         return resultHex;
       });
   },

@@ -21,6 +21,16 @@ const createResultObject = (entity, apiResponse, options) => {
         }
       }
     };
+  } else if (options.returnMisses) {
+    return {
+      entity,
+      data: {
+        summary: ['No Sample Found'],
+        details: {
+          noSampleExists: true
+        }
+      }
+    };
   } else {
     return {
       entity,

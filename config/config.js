@@ -1,9 +1,10 @@
 module.exports = {
   name: 'VMRay',
   acronym: 'VMR',
-  description: 'TODO',
+  description:
+    'Lookup VMRay Sample information by hash and check local files for existing Samples in VMRay.',
   entityTypes: ['MD5', 'SHA1', 'SHA256'],
-  styles: ['./client/styles.less'],
+  styles: ['./styles/styles.less'],
   defaultColor: 'light-blue',
   onDemandOnly: true,
   block: {
@@ -27,8 +28,9 @@ module.exports = {
   options: [
     {
       key: 'url',
-      name: 'VMRay API URL',
-      description: 'The base URL of the VMRay API including the schema (i.e., https://)',
+      name: 'VMRay URL',
+      description:
+        'The base URL of your hosted or Cloud based VMRay instance including the schema (i.e., https://).  For example, "https://us.cloud.vmray.com" or "https://eu.cloud.vmray.com".',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -40,6 +42,15 @@ module.exports = {
       description: 'A valid VMRay API Key',
       default: '',
       type: 'password',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'returnMisses',
+      name: 'Return result when no sample is found',
+      description: 'If checked, the integration will return a result even when no Sample could be found for the given hash.',
+      default: true,
+      type: 'boolean',
       userCanEdit: false,
       adminOnly: true
     }

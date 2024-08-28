@@ -10,7 +10,7 @@
   font-weight: 500;
   font-size: 12px;
 
-  &.red {
+  &.red, &.malicious {
     color: rgb(178, 47, 69);
   }
 
@@ -18,7 +18,7 @@
     color: rgb(237, 187, 126);
   }
 
-  &.green {
+  &.green, &.clean {
     color: rgb(58, 154, 129);
   }
 
@@ -183,6 +183,33 @@
   }
 }
 
+.verdict-tag {
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 3px 5px;
+  min-width: 80px;
+  text-align: center;
+  background-color: rgb(150, 150, 150);
+
+  &.red, &.malicious {
+    background-color: rgb(178, 47, 69);
+  }
+
+  &.yellow, &.suspicious {
+    background-color: rgb(237, 187, 126);
+  }
+
+  &.green, &.clean {
+    background-color: rgb(58, 154, 129);
+  }
+
+  &.gray {
+    background-color: rgb(150, 150, 150)
+  }
+}
+
 .choose-file-btn {
   padding: 5px 0px;
 
@@ -297,7 +324,38 @@
   }
 }
 
-.tactic-column{
+.indicator-block {
+  margin-bottom: 10px;
+
+  :last-child {
+    margin-bottom: 0px;
+  }
+
+  .indicator-type-block {
+    padding: 5px 0px;
+
+    .indicator-type {
+      font-weight: 500;
+    }
+  }
+
+  .ioc-container {
+    margin-bottom: 10px;
+
+    .ioc-value {
+      font-weight: 500;
+      word-break: break-all;
+      margin-right: 3px;
+    }
+
+    padding: 5px;
+    border: 1px solid #e2e9f3;
+    border-radius: 4px;
+  }
+}
+
+
+.tactic-column {
   margin-bottom: 10px;
 
   :last-child {
@@ -317,7 +375,7 @@
     margin-bottom: 2px;
   }
 
-  .technique-block{
+  .technique-block {
     border-left: 5px solid;
     padding: 3px 5px;
     margin-bottom: 2px;
