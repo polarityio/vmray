@@ -90,14 +90,14 @@ polarity.export = PolarityComponent.extend({
       this.cancelDefaultEvent(event);
 
       let file;
-      if (event.dataTransfer.items) {
+      if (event.datatransfer && event.dataTransfer.items) {
         // Use DataTransferItemList interface to access the file(s)
         let item = [...event.dataTransfer.items][0];
         // If dropped items aren't files, reject them
         if (item.kind === 'file') {
           file = item.getAsFile();
         }
-      } else if (event.dataTransfer.files) {
+      } else if (event.dataTransfer && event.dataTransfer.files) {
         // Use DataTransfer interface to access the file(s)
         file = [...event.dataTransfer.files][0];
       } else if (event && event.target && event.target.files && event.target.files[0]) {
