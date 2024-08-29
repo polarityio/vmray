@@ -499,11 +499,12 @@ polarity.export = PolarityComponent.extend({
     return hexString;
   },
   getVerdictColorClass: function (verdict) {
-    if (verdict === 'malicious') {
+    let verdictLower = verdict.toLowerCase();
+    if (verdictLower === 'malicious') {
       return 'red';
-    } else if (verdict === 'suspicious') {
+    } else if (verdictLower === 'suspicious') {
       return 'yellow';
-    } else if (verdict === 'clean') {
+    } else if (verdictLower === 'clean') {
       return 'green';
     } else {
       return 'gray';
