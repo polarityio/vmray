@@ -22,7 +22,17 @@ polarity.export = PolarityComponent.extend({
     if (!this.get('block._state')) {
       this.set('block._state', {});
       this.set('block._state.fileCheckResults', Ember.A());
+      this.set('block._state.retryErrors', Ember.A());
     }
+
+    const isRetry = this.checkForRetryError(this.get('details'), {
+      message: 'Sample could not be searched',
+      action: 'retryDoLookup',
+      loadingVariable: 'retryingDoLookup',
+      btnText: 'Retry Search'
+    });
+
+    this.loadQuota();
     this._super(...arguments);
   },
   actions: {
@@ -80,6 +90,30 @@ polarity.export = PolarityComponent.extend({
         this.loadIndicators();
       }
     },
+    loadQuota: function () {
+      this.loadQuota();
+    },
+    loadIndicators: function () {
+      this.loadIndicators();
+    },
+    loadAnalysis: function () {
+      this.loadAnalysis();
+    },
+    loadMitreAttack: function () {
+      this.loadMitreAttack();
+    },
+    loadVti: function () {
+      this.loadVti();
+    },
+    loadRelations: function () {
+      this.loadRelations();
+    },
+    retryDoLookup: function () {
+      this.retryDoLookup();
+    },
+    getSampleBySha256: function (sha256, file) {
+      this.getSampleBySha256(sha256, file);
+    },
     copyText: function (text, showVariable) {
       this.copyTextToClipboard(text, showVariable);
     },
@@ -89,26 +123,48 @@ polarity.export = PolarityComponent.extend({
     getSampleByFile: function (event) {
       this.cancelDefaultEvent(event);
 
-      let file;
+      let file = null;
       if (event.datatransfer && event.dataTransfer.items) {
         // Use DataTransferItemList interface to access the file(s)
         let item = [...event.dataTransfer.items][0];
         // If dropped items aren't files, reject them
-        if (item.kind === 'file') {
+        if (item && item.kind === 'file') {
           file = item.getAsFile();
+        } else {
+          console.error('Not a file', file);
+          this.set('fileCheckNotAFile', true);
         }
       } else if (event.dataTransfer && event.dataTransfer.files) {
         // Use DataTransfer interface to access the file(s)
         file = [...event.dataTransfer.files][0];
       } else if (event && event.target && event.target.files && event.target.files[0]) {
         file = event.target.files[0];
+      } else {
+        // dragged item was not a file
+        this.set('fileCheckNotAFile', true);
       }
 
       this.set('onDragOver', false);
 
-      this.hashFile(file).then((sha256) => {
-        this.getSampleBySha256(sha256, file);
-      });
+      if (file) {
+        this.set('fileCheckNotAFile', false);
+        this.hashFile(file)
+          .then((sha256) => {
+            if (sha256) {
+              this.getSampleBySha256(sha256, file);
+            } else {
+              this.set('fileCheckNotAFile', true);
+            }
+          })
+          .catch((error) => {
+            if (error && error.currentTarget && error.currentTarget.error) {
+              console.error('Error hashing file', error.currentTarget.error);
+            } else {
+              console.error('Error hashing file', error);
+            }
+            this.set('fileCheckNotAFile', true);
+          });
+      }
     },
     runOnDemandLookup: function (searchString) {
       if (this.windowService.isClientWindow) {
@@ -140,11 +196,6 @@ polarity.export = PolarityComponent.extend({
         }, 2000);
       });
   },
-  onDetailsLoaded: function () {
-    if (!this.isDestroyed) {
-      this.set('onDetailsLoaded', true);
-    }
-  },
   loadVti: function () {
     this.set('loadingVti', true);
     const payload = {
@@ -153,22 +204,30 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        result.threat_indicators.forEach((indicator) => {
-          if (indicator.score === 5) {
-            indicator.scoreClass = 'five';
-          } else if (indicator.score === 4) {
-            indicator.scoreClass = 'four';
-          } else if (indicator.score === 3) {
-            indicator.scoreClass = 'three';
-          } else if (indicator.score === 2) {
-            indicator.scoreClass = 'two';
-          } else if (indicator.score === 1) {
-            indicator.scoreClass = 'one';
-          } else {
-            indicator.scoreClass = 'clean';
-          }
+        const isRetry = this.checkForRetryError(result, {
+          message: 'VMRay Threat Indicators could not be loaded',
+          action: 'loadVti',
+          loadingVariable: 'loadingVti',
+          btnText: 'Reload VTIs'
         });
-        this.set('details.vti', result);
+        if (!isRetry) {
+          result.threat_indicators.forEach((indicator) => {
+            if (indicator.score === 5) {
+              indicator.scoreClass = 'five';
+            } else if (indicator.score === 4) {
+              indicator.scoreClass = 'four';
+            } else if (indicator.score === 3) {
+              indicator.scoreClass = 'three';
+            } else if (indicator.score === 2) {
+              indicator.scoreClass = 'two';
+            } else if (indicator.score === 1) {
+              indicator.scoreClass = 'one';
+            } else {
+              indicator.scoreClass = 'clean';
+            }
+          });
+          this.set('details.vti', result);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -186,12 +245,20 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        result.forEach((analysis) => {
-          const verdict = analysis.analysis_verdict;
-          analysis.analysis_verdict_color = this.getVerdictColorClass(verdict);
+        const isRetry = this.checkForRetryError(result, {
+          message: 'Top Analyses could not be loaded',
+          action: 'loadAnalysis',
+          loadingVariable: 'loadingAnalysis',
+          btnText: 'Reload Analyses'
         });
+        if (!isRetry) {
+          result.forEach((analysis) => {
+            const verdict = analysis.analysis_verdict;
+            analysis.analysis_verdict_color = this.getVerdictColorClass(verdict);
+          });
 
-        this.set('details.analysis', result);
+          this.set('details.analysis', result);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -214,7 +281,15 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        this.set('details.relations', result);
+        const isRetry = this.checkForRetryError(result, {
+          message: 'Top Child Samples could not be loaded',
+          action: 'loadRelations',
+          loadingVariable: 'loadingRelations',
+          btnText: 'Reload Child Samples'
+        });
+        if (!isRetry) {
+          this.set('details.relations', result);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -232,7 +307,15 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        this.set('details.mitreAttack', result);
+        const isRetry = this.checkForRetryError(result, {
+          message: 'ATT&CK data could not be loaded',
+          action: 'loadMitreAttack',
+          loadingVariable: 'mitreAttackLoading',
+          btnText: 'Reload ATT&CK'
+        });
+        if (!isRetry) {
+          this.set('details.mitreAttack', result);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -250,7 +333,16 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        this.set('details.indicators', result);
+        const isRetry = this.checkForRetryError(result, {
+          message: 'Indicators could not be loaded',
+          action: 'loadIndicators',
+          loadingVariable: 'indicatorsLoading',
+          btnText: 'Reload Indicators'
+        });
+
+        if (!isRetry) {
+          this.set('details.indicators', result);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -258,6 +350,74 @@ polarity.export = PolarityComponent.extend({
       })
       .finally(() => {
         this.set('indicatorsLoading', false);
+      });
+  },
+  retryDoLookup: function () {
+    this.set('retryingDoLookup', true);
+    const payload = {
+      action: 'DO_LOOKUP',
+      entity: this.get('block.entity')
+    };
+    this.sendIntegrationMessage(payload)
+      .then((result) => {
+        const isRetry = this.checkForRetryError(result.data.details, {
+          message: 'Sample could not be searched',
+          action: 'retryDoLookup',
+          loadingVariable: 'retryingDoLookup',
+          btnText: 'Retry Search'
+        });
+
+        if (!isRetry) {
+          this.set('block.data.summary', result.data.summary);
+          this.set('block.data.details.sample', result.data.details.sample);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        this.set('errorMessage', JSON.stringify(err, null, 2));
+      })
+      .finally(() => {
+        this.set('retryingDoLookup', false);
+      });
+  },
+  checkForRetryError: function (result, retryObject) {
+    this.set(
+      'block._state.retryErrors',
+      this.get('block._state.retryErrors').filter(
+        (retryError) => retryError.action !== retryObject.action
+      )
+    );
+    if (result && result.isRetryError) {
+      this.get('block._state.retryErrors').pushObject(retryObject);
+      return true;
+    }
+    return false;
+  },
+  loadQuota: function () {
+    this.set('quotaLoading', true);
+    const payload = {
+      action: 'GET_QUOTA'
+    };
+    this.sendIntegrationMessage(payload)
+      .then((result) => {
+        const isRetry = this.checkForRetryError(result, {
+          message: 'Quota could not be loaded',
+          action: 'loadQuota',
+          loadingVariable: 'quotaLoading',
+          btnText: 'Reload Quota'
+        });
+
+        if (!isRetry) {
+          this.set('details.quota', result);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+
+        this.set('errorMessage', JSON.stringify(err, null, 2));
+      })
+      .finally(() => {
+        this.set('quotaLoading', false);
       });
   },
   getSampleBySha256: function (sha256, file) {
@@ -268,16 +428,29 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        if (!result.noResults) {
-          result.sample_verdict_color = this.getVerdictColorClass(result.sample_verdict);
-        }
-
-        this.get('block._state.fileCheckResults').unshiftObject({
-          fileSize: file.size,
-          fileName: file.name,
+        const isRetry = this.checkForRetryError(result, {
+          message: 'Sample could not be loaded',
+          action: 'getSampleBySha256',
           sha256,
-          sample: result.noResults ? null : result
+          file,
+          loadingVariable: 'loadingFileCheckSample',
+          btnText: 'Reload Sample'
         });
+
+        if (!isRetry) {
+          if (!result.noResults) {
+            result.sample_verdict_color = this.getVerdictColorClass(
+              result.sample_verdict
+            );
+          }
+
+          this.get('block._state.fileCheckResults').unshiftObject({
+            fileSize: file.size,
+            fileName: file.name,
+            sha256,
+            sample: result.noResults ? null : result
+          });
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -304,6 +477,9 @@ polarity.export = PolarityComponent.extend({
       const fr = new FileReader();
       fr.onload = () => {
         resolve(fr.result);
+      };
+      fr.onerror = (error) => {
+        reject(error);
       };
       fr.readAsArrayBuffer(file);
     });

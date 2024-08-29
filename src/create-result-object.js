@@ -1,5 +1,17 @@
 const { getLogger } = require('./logger');
 const xbytes = require('xbytes');
+
+const createRetryObject = (entity, action, payload, options) => {
+  return {
+    entity,
+    data: {
+      summary: ['API Limit Reached'],
+      details: {
+        isRetryError: true
+      }
+    }
+  };
+};
 /**
  *
  * @param entities
@@ -53,5 +65,6 @@ const createSummary = (sample, options) => {
 };
 
 module.exports = {
-  createResultObject
+  createResultObject,
+  createRetryObject
 };

@@ -3,8 +3,8 @@
 const async = require('async');
 
 const { setLogger } = require('./src/logger');
-const { parseErrorToReadableJSON, ApiRequestError } = require('./src/errors');
-const { createResultObject } = require('./src/create-result-object');
+const { RetryRequestError } = require('./src/errors');
+const { createResultObject, createRetryObject } = require('./src/create-result-object');
 const { searchSampleByHash } = require('./src/search-sample-by-hash');
 const { getApiQuota } = require('./src/get-api-quota');
 const { getVti } = require('./src/get-vti');
@@ -30,9 +30,17 @@ const doLookup = async (entities, options, cb) => {
 
   entities.forEach((entity) => {
     tasks.push(async () => {
-      const sampleDetails = await searchSampleByHash(entity, options);
-      const sampleResultObject = createResultObject(entity, sampleDetails, options);
-      lookupResults.push(sampleResultObject);
+      try {
+        const sampleDetails = await searchSampleByHash(entity, options);
+        const sampleResultObject = createResultObject(entity, sampleDetails, options);
+        lookupResults.push(sampleResultObject);
+      } catch (requestError) {
+        if (requestError instanceof RetryRequestError) {
+          return lookupResults.push(createRetryObject(entity, 'DO_LOOKUP', {}, options));
+        } else {
+          throw requestError;
+        }
+      }
     });
   });
 
@@ -45,16 +53,6 @@ const doLookup = async (entities, options, cb) => {
   Logger.trace({ lookupResults }, 'Lookup Results');
   cb(null, lookupResults);
 };
-
-async function onDetails(resultObject, options, cb) {
-  try {
-    const quota = await getApiQuota(options);
-    resultObject.data.details.quota = quota;
-    cb(null, resultObject.data);
-  } catch (error) {
-    return cb(error);
-  }
-}
 
 async function onMessage(payload, options, cb) {
   Logger.trace({ payload }, 'onMessage payload');
@@ -78,6 +76,11 @@ async function onMessage(payload, options, cb) {
           });
         }
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
@@ -87,6 +90,11 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ vti }, 'VTI Data');
         cb(null, vti);
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
@@ -96,6 +104,11 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ analysis }, 'Analysis Data');
         cb(null, analysis);
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
@@ -105,6 +118,11 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ relations }, 'Relations Data');
         cb(null, relations);
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
@@ -114,6 +132,11 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ mitreAttack }, 'Mitre ATT&CK Data');
         cb(null, mitreAttack);
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
@@ -123,9 +146,33 @@ async function onMessage(payload, options, cb) {
         Logger.trace({ indicators }, 'Indicators');
         cb(null, indicators);
       } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
         return cb(error);
       }
       break;
+    case 'GET_QUOTA':
+      try {
+        const quota = await getApiQuota(options);
+        Logger.trace({ quota }, 'Quota');
+        cb(null, quota);
+      } catch (error) {
+        if (error instanceof RetryRequestError) {
+          return cb(null, {
+            isRetryError: true
+          });
+        }
+        return cb(error);
+      }
+      break;
+    case 'DO_LOOKUP':
+      await doLookup([payload.entity], options, (err, lookupResults) => {
+        Logger.trace({ lookupResults }, 'lookupResults');
+        cb(err, lookupResults.length > 0 ? lookupResults[0] : []);
+      });
   }
 }
 
@@ -134,8 +181,7 @@ function validateOptions(userOptions, cb) {
 
   if (
     typeof userOptions.url.value !== 'string' ||
-    (typeof userOptions.url.value === 'string' &&
-      userOptions.url.value.length === 0)
+    (typeof userOptions.url.value === 'string' && userOptions.url.value.length === 0)
   ) {
     errors.push({
       key: 'url',
@@ -161,6 +207,5 @@ module.exports = {
   startup,
   doLookup,
   validateOptions,
-  onDetails,
   onMessage
 };

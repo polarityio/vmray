@@ -1,8 +1,49 @@
+{{#if (gt block._state.retryErrors.length 0)}}
+  <div class="api-limit-container">
+    <h1 class="p-title">{{fa-icon icon="exclamation-triangle" fixedWidth=true class="orange"}} API Limit Reached</h1>
+    <div>
+      <div class="p-block p-footnote">
+        You have reached an API Quota or API Throttling Limit.  You can retry your request by clicking the button below.
+      </div>
+      {{#each block._state.retryErrors as | retryError |}}
+        <div class="mt-2">
+          {{retryError.message}}
+        </div>
+        <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1"{{action retryError.action retryError.sha256 retryError.file}}>
+          {{#if (get this retryError.loadingVariable)}}
+            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+          {{else}}
+            {{retryError.btnText}}
+          {{/if}}
+        </button>
+      {{/each}}
+    </div>
+    {{#if quotaLoading}}
+      <div class="p-footnote mt-2">
+        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading quota
+      </div>
+    {{/if}}
+    {{#unless (is-empty quota)}}
+      <div class="p-footnote mt-2 text-right">
+        {{#if (eq quota.quota_limit 0)}}
+          No API Key Quota Limit
+        {{else}}
+          API Key Quota: {{quota.used_quota}} / {{quota.quota_limit}}
+        {{/if}}
+      </div>
+    {{/unless}}
+  </div>
+{{/if}}
 {{#if details.noSampleExists}}
   <h1 class="p-title">{{fa-icon icon="empty-set" fixedWidth=true}} No Sample</h1>
   <div class="p-value">
     No sample was found for the <span class="emphasize-text">{{block.entity.hashType}}</span> <i>{{block.entity.value}}</i>
   </div>
+  {{#if quotaLoading}}
+    <div class="p-footnote mt-2">
+      {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading quota
+    </div>
+  {{/if}}
   {{#unless (is-empty quota)}}
     <div class="p-footnote mt-2">
       {{#if (eq quota.quota_limit 0)}}
@@ -38,59 +79,71 @@
   {{#if (eq activeTab "overview")}}
     <h1 class="p-title">{{fa-icon icon="info-circle" fixedWidth=true}} Sample Overview <span
             class="p-footnote ml-1">#{{sample.sample_id}}</span></h1>
-    <div>
-      <div class="verdict {{verdictColorClass}}">
-        {{#if sample.sample_verdict}}
-          {{sample.sample_verdict}}
-        {{else}}
-          Verdict Not Available
-        {{/if}}
-        {{#if sample.sample_verdict_reason_description}}
-          <span>
+    {{#if (is-empty sample)}}
+      <div class="p-block">
+        Sample data unavailable
+      </div>
+    {{else}}
+      <div>
+        <div class="verdict {{verdictColorClass}}">
+          {{#if sample.sample_verdict}}
+            {{sample.sample_verdict}}
+          {{else}}
+            Verdict Not Available
+          {{/if}}
+          {{#if sample.sample_verdict_reason_description}}
+            <span>
           {{fa-icon icon="info-circle" fixedWidth=true}}
-            {{bs-tooltip title=sample.sample_verdict_reason_description}}
+              {{bs-tooltip title=sample.sample_verdict_reason_description}}
         </span>
+          {{/if}}
+        </div>
+        <div class="mt-1">
+          <a href="{{sample.sample_webif_url}}">View in VMRay{{fa-icon icon="external-link-square" fixedWidth=true
+                                                                       class="external-link-icon"}}</a>
+        </div>
+        <div class="p-value mt-1">
+          {{#if (eq sample.sample_type "URL")}}
+            {{sample.sample_display_url}}
+          {{else}}
+            {{sample.sample_filename}}
+          {{/if}}
+        </div>
+        <div class="mt-1">
+          <span class="p-value">{{sample.sample_sha256hash}}</span> <span class="p-footnote">(SHA256)</span>
+        </div>
+        <div class="bordered p-value mt-1">
+          {{sample.sample_type}}
+        </div>
+        <div class="p-value mt-1">
+          First submitted <span class="emphasize-text">{{moment-from-now sample.sample_created
+                                                                         timeZone=timezone}}{{bs-tooltip
+                title=(moment-format sample.sample_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+        </div>
+        {{#if (gt sample.sample_classifications.length 0)}}
+          <h1 class="p-title">Classifications</h1>
+          <div>
+            {{#each sample.sample_classifications as | classification |}}
+              <span class="tag">{{classification}}</span>
+            {{/each}}
+          </div>
+        {{/if}}
+        {{#if (gt sample.sample_threat_names.length 0)}}
+          <h1 class="p-title">Threat Names</h1>
+          <div>
+            {{#each sample.sample_threat_names as | threat |}}
+              <span class="tag">{{threat}}</span>
+            {{/each}}
+          </div>
         {{/if}}
       </div>
-      <div class="mt-1">
-        <a href="{{sample.sample_webif_url}}">View in VMRay{{fa-icon icon="external-link-square" fixedWidth=true
-                                                                     class="external-link-icon"}}</a>
+    {{/if}}
+
+    {{#if quotaLoading}}
+      <div class="p-footnote mt-2">
+        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading quota
       </div>
-      <div class="p-value mt-1">
-        {{#if (eq sample.sample_type "URL")}}
-          {{sample.sample_display_url}}
-        {{else}}
-          {{sample.sample_filename}}
-        {{/if}}
-      </div>
-      <div class="mt-1">
-        <span class="p-value">{{sample.sample_sha256hash}}</span> <span class="p-footnote">(SHA256)</span>
-      </div>
-      <div class="bordered p-value mt-1">
-        {{sample.sample_type}}
-      </div>
-      <div class="p-value mt-1">
-        First submitted <span class="emphasize-text">{{moment-from-now sample.sample_created
-                                                                       timeZone=timezone}}{{bs-tooltip
-              title=(moment-format sample.sample_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
-      </div>
-      {{#if (gt sample.sample_classifications.length 0)}}
-        <h1 class="p-title">Classifications</h1>
-        <div>
-          {{#each sample.sample_classifications as | classification |}}
-            <span class="tag">{{classification}}</span>
-          {{/each}}
-        </div>
-      {{/if}}
-      {{#if (gt sample.sample_threat_names.length 0)}}
-        <h1 class="p-title">Threat Names</h1>
-        <div>
-          {{#each sample.sample_threat_names as | threat |}}
-            <span class="tag">{{threat}}</span>
-          {{/each}}
-        </div>
-      {{/if}}
-    </div>
+    {{/if}}
     {{#unless (is-empty quota)}}
       <div class="p-footnote mt-2">
         {{#if (eq quota.quota_limit 0)}}
@@ -285,61 +338,62 @@
       {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Top Child Samples
     {{/if}}
     {{#unless loadingRelations}}
-      {{#if (eq sample.sample_child_relations.length 0)}}
+      {{#if (is-empty details.relations)}}
         No Child Samples Found
-      {{/if}}
-      {{#each sample.sample_child_relations as | relation |}}
-        {{#let (get details.relations relation.relation_id) as | child |}}
-          <div class="analysis-container">
-            <div>
-              {{child.relation.sample_relation_relation_reason}}
-            </div>
-            <div class="analysis-metadata-container mt-1">
+      {{else}}
+        {{#each sample.sample_child_relations as | relation |}}
+          {{#let (get details.relations relation.relation_id) as | child |}}
+            <div class="analysis-container">
               <div>
-                First submitted <span class="emphasize-text">{{moment-from-now child.relation.sample_relation_created
-                                                                               timeZone=timezone}}{{bs-tooltip
-                      title=(moment-format child.relation.sample_relation_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+                {{child.relation.sample_relation_relation_reason}}
               </div>
-              <div class="analysis-verdict {{relation.relation_child_sample_verdict_color}}">
-                {{#if (is-empty relation.relation_child_sample_verdict)}}
-                  N/A
-                {{else}}
-                  {{relation.relation_child_sample_verdict}}
-                {{/if}}
-                {{#unless (is-empty relation.relation_child_sample_verdict_reason_description)}}
-                  <span>
+              <div class="analysis-metadata-container mt-1">
+                <div>
+                  First submitted <span class="emphasize-text">{{moment-from-now child.relation.sample_relation_created
+                                                                                 timeZone=timezone}}{{bs-tooltip
+                        title=(moment-format child.relation.sample_relation_created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone)}}</span>
+                </div>
+                <div class="analysis-verdict {{relation.relation_child_sample_verdict_color}}">
+                  {{#if (is-empty relation.relation_child_sample_verdict)}}
+                    N/A
+                  {{else}}
+                    {{relation.relation_child_sample_verdict}}
+                  {{/if}}
+                  {{#unless (is-empty relation.relation_child_sample_verdict_reason_description)}}
+                    <span>
                 {{fa-icon icon="info-circle" fixedWidth=true}}
-                    {{bs-tooltip title=relation.relation_child_sample_verdict_reason_description}}
+                      {{bs-tooltip title=relation.relation_child_sample_verdict_reason_description}}
               </span>
-                {{/unless}}
+                  {{/unless}}
+                </div>
+              </div>
+              <div>
+                <span class="p-key">Relation Type:</span>
+                <span class="p-value">{{relation.relation_type}}</span>
+              </div>
+              <div>
+                <span class="p-key">Sample Name:</span>
+                <span class="p-value">
+                  {{#if (eq child.sample.sample_type "URL")}}
+                    {{child.sample.sample_display_url}}
+                  {{else}}
+                    {{child.sample.sample_filename}}
+                  {{/if}}
+                </span>
+              </div>
+              <div>
+                <span class="p-key">Sample Type:</span>
+                <span class="p-value">{{child.sample.sample_type}}</span>
+              </div>
+              <div>
+                <span class="p-key">Sample ID:</span>
+                <span class="p-value"><a href="{{child.sample.sample_webif_url}}">#{{child.sample.sample_id}} {{fa-icon
+                        icon="external-link" fixedWidth=true class="external-link-icon"}}</a></span>
               </div>
             </div>
-            <div>
-              <span class="p-key">Relation Type:</span>
-              <span class="p-value">{{relation.relation_type}}</span>
-            </div>
-            <div>
-              <span class="p-key">Sample Name:</span>
-              <span class="p-value">
-                {{#if (eq child.sample.sample_type "URL")}}
-                  {{child.sample.sample_display_url}}
-                {{else}}
-                  {{child.sample.sample_filename}}
-                {{/if}}
-              </span>
-            </div>
-            <div>
-              <span class="p-key">Sample Type:</span>
-              <span class="p-value">{{child.sample.sample_type}}</span>
-            </div>
-            <div>
-              <span class="p-key">Sample ID:</span>
-              <span class="p-value"><a href="{{child.sample.sample_webif_url}}">#{{child.sample.sample_id}} {{fa-icon
-                      icon="external-link" fixedWidth=true class="external-link-icon"}}</a></span>
-            </div>
-          </div>
-        {{/let}}
-      {{/each}}
+          {{/let}}
+        {{/each}}
+      {{/if}}
     {{/unless}}
   {{/if}}
   {{#if (eq activeTab "indicators")}}
@@ -578,6 +632,11 @@
       <!--our custom file upload button-->
       or <label for="vmray-file-upload-btn-{{uniqueIdPrefix}}" class="p-action choose-file-btn">Choose a File</label>
     </div>
+    {{#if fileCheckNotAFile}}
+      <div>
+        {{fa-icon icon="exclamation-triangle" fixedWidth=true class="orange"}} The dropped item is not a valid file or could not be read due to permission issues.
+      </div>
+    {{/if}}
     {{#each fileCheckResults as | fileCheckResult |}}
       <div class="file-check-container">
         <div class="d-flex justify-content-between align-items-center">
@@ -589,7 +648,6 @@
               {{fa-icon icon="search" fixedWidth=true}}
               {{bs-tooltip title="Search SHA256 in Polarity"}}
             </button>
-
           </div>
         </div>
         <div>
