@@ -4,7 +4,7 @@ const url = require('url');
 
 const request = require('postman-request');
 const { getLogger } = require('./logger');
-const { NetworkError } = require('./errors');
+const { NetworkError, RetryRequestError } = require('./errors');
 
 const {
   request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
@@ -45,6 +45,15 @@ class PolarityRequest {
             new NetworkError('Unable to complete network request', {
               cause: err,
               requestOptions
+            })
+          );
+        }
+
+        if (response.statusCode === 429) {
+          return reject(
+            new RetryRequestError('limit', {
+              requestOptions,
+              responseBody: response.body
             })
           );
         }
